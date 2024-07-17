@@ -32,7 +32,7 @@ def analyze_image_and_text(text_description, image_url=None):
 
     try:
         # Generate the medical advice using OpenAI's ChatCompletion API (adjust model as per your access)
-        response = OpenAI.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=messages,
             max_tokens=400,
