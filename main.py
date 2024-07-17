@@ -2,6 +2,7 @@ import streamlit as st
 from openai import OpenAI
 import requests
 import PIL.Image
+from io import BytesIO
 
 # Function to analyze text and optionally an image
 def analyze_image_and_text(text_description, image_url=None):
