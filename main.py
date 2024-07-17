@@ -26,7 +26,7 @@ def analyze_image_and_text(text_description, image_bytes=None):
                 "text": text_description,
                 "image": {
                     "type": "image/jpeg",
-                    "content": image_bytes
+                    "content": base64.b64encode(image_bytes).decode('utf-8')
                 }
             }
         })
