@@ -28,19 +28,15 @@ def analyze_image_and_text(text_description, image_bytes=None):
     if image_bytes is not None:
         messages.append({
             "role": "user",
-            "content": {
-                "text": text_description,
-                "image": {
-                    "type": "image/jpeg",
-                    "content": image_bytes
-                }
-            }
+            "content": [
+              {"type": "image_url", "image_url": {"url": img_url}}
+          ]
         })
 
     try:
         # Generate the medical advice using OpenAI's Chat API
         response = client.chat.completions.create(
-            model="gpt-3.5-turbo",
+            model="gpt-4o",
             messages=messages,
             max_tokens=400,
             temperature=0.8
