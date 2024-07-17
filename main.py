@@ -26,7 +26,13 @@ def analyze_image_and_text(text_description, image_bytes=None):
     if image_bytes:
         messages.append({
             "role": "user",
-            "content": {"text": text_description, "image": image_bytes}
+            "content": {
+                "text": text_description,
+                "image": {
+                    "type": "image/jpeg",
+                    "content": image_bytes.decode('utf-8')  # Ensure image bytes are in the correct format
+                }
+            }
         })
 
     try:
@@ -57,11 +63,7 @@ with st.form(key='input_form'):
     if submitted and text_input.strip():
         image_bytes = None
         if uploaded_file is not None:
-            image = PIL.Image.open(uploaded_file)
-            # Convert image to JPEG bytes
-            jpeg_image = BytesIO()
-            image.save(jpeg_image, format='JPEG')
-            image_bytes = jpeg_image.getvalue()
+            image_bytes = uploaded_file.read()  # Read image bytes directly from file uploader
 
         advice = analyze_image_and_text(text_input, image_bytes)
         if advice:
