@@ -18,14 +18,29 @@ def analyze_image_and_text(text_description, image_url=None):
     ]
 
     # If an image URL is provided, fetch the image and add it to the messages list
-    if image_url is not None :
-      r=requests.get(image_url)
-      open('image.png','wb').write(r.content)
-      image_desc= PIL.Image.open('image.png')
-      messages.append({
-            "role": "user",
-            "content": {"text": text_description, "image": image_desc}
-            })
+    if image_url:
+        try:
+            response = requests.get(image_url)
+            if response.status_code == 200:
+                # Open the image using PIL
+                image = PIL.Image.open(BytesIO(response.content))
+
+                # Convert image to bytes
+                image_bytes = BytesIO()
+                image.save(image_bytes, format='JPEG')
+                image_bytes = image_bytes.getvalue()
+
+                # Add image to messages
+                messages.append({
+                    "role": "user",
+                    "content": {"text": text_description, "image": image_bytes}
+                })
+            else:
+                st.error("Failed to fetch the image from the URL.")
+                return None
+        except Exception as e:
+            st.error(f"Error fetching or processing the image: {str(e)}")
+            return None
 
     try:
         # Generate the medical advice using OpenAI's ChatCompletion API (adjust model as per your access)
