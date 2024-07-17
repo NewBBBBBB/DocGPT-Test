@@ -1,9 +1,9 @@
 import streamlit as st
 from openai import OpenAI
 import base64
+import requests
 from io import BytesIO
 import PIL.Image
-
 
 # Function to encode image as base64
 def encode_image(image):
@@ -28,19 +28,22 @@ def analyze_image_and_text(text_description, uploaded_file=None):
 
     # If an image is uploaded, encode it as base64 and add to messages
     if uploaded_file is not None:
-        image_bytes = uploaded_file.read()
-        image = PIL.Image.open(BytesIO(image_bytes))
-        encoded_image = encode_image(image)
-        messages.append({
-            "role": "user",
-            "content": {
-                "text": text_description,
-                "image": {
-                    "type": "image/jpeg",
-                    "content": encoded_image
+        try:
+            image = PIL.Image.open(uploaded_file)
+            encoded_image = encode_image(image)
+            messages.append({
+                "role": "user",
+                "content": {
+                    "text": text_description,
+                    "image": {
+                        "type": "image/jpeg",
+                        "content": encoded_image
+                    }
                 }
-            }
-        })
+            })
+        except Exception as e:
+            st.error(f"Error processing image: {str(e)}")
+            return None
 
     try:
         # Generate the medical advice using OpenAI's Chat API
@@ -68,7 +71,7 @@ with st.form(key='input_form'):
     st.write('Please provide information for health analysis')
     text_input = st.text_input('Enter symptoms or health concerns')
 
-    uploaded_file = st.file_uploader("Upload a JPEG image", type="jpg")
+    uploaded_file = st.file_uploader("Upload a JPEG image", type=["jpg", "jpeg"])
 
     submitted = st.form_submit_button("Submit")
     if submitted and text_input.strip():
