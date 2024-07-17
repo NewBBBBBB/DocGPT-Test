@@ -25,7 +25,7 @@ def analyze_image_and_text(text_description, image_bytes=None):
     ]
 
     # If image bytes are provided, add it to the messages list
-    if image_bytes:
+    if image_bytes is not None:
         messages.append({
             "role": "user",
             "content": {
