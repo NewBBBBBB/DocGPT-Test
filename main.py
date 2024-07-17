@@ -1,7 +1,7 @@
 import streamlit as st
 from openai import OpenAI
 import requests
-from io import BytesIO
+import PIL.Image
 
 # Function to analyze text and optionally an image
 def analyze_image_and_text(text_description, image_url=None):
@@ -18,17 +18,14 @@ def analyze_image_and_text(text_description, image_url=None):
     ]
 
     # If an image URL is provided, fetch the image and add it to the messages list
-    if image_url !=None :
-        response = requests.get(image_url)
-        if response.status_code == 200:
-            image_bytes = BytesIO(response.content).read()
-            messages.append({
-                "role": "user",
-                "content": {"text": text_description, "image": image_bytes}
+    if image_url is not None :
+      r=requests.get(image_url)
+      open('image.png','wb').write(r.content)
+      image_desc= PIL.Image.open('image.png')
+      messages.append({
+            "role": "user",
+            "content": {"text": text_description, "image": image_desc}
             })
-        else:
-            st.error("Failed to fetch the image from the URL.")
-            return None
 
     try:
         # Generate the medical advice using OpenAI's ChatCompletion API (adjust model as per your access)
