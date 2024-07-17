@@ -59,13 +59,14 @@ with st.form(key='input_form'):
 
     submitted = st.form_submit_button("Submit")
     if submitted and text_input.strip():
-        image_bytes = None
+        img_url = None
         if uploaded_file is not None:
           base64_image = encode_image(uploaded_file)
           img_type = uploaded_file.type
           img_url = f"data:{img_type};base64,{base64_image}"
 
         advice = analyze_image_and_text(text_input,img_url)
+      
         if advice:
             st.write("Here's your medical advice:")
             st.info(advice)
