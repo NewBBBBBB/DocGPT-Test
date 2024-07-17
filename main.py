@@ -1,12 +1,8 @@
 import streamlit as st
 from openai import OpenAI
-from io import BytesIO
-import PIL.Image
 import requests
-
-# Initialize OpenAI client with API key
-api_key = st.secrets['OPENAI_SECRET']
-client = OpenAI(api_key=api_key)
+import PIL.Image
+from io import BytesIO
 
 # Function to analyze text and optionally an image
 def analyze_image_and_text(text_description, image_bytes=None):
@@ -30,7 +26,7 @@ def analyze_image_and_text(text_description, image_bytes=None):
                 "text": text_description,
                 "image": {
                     "type": "image/jpeg",
-                    "content": image_bytes.decode('utf-8')  # Ensure image bytes are in the correct format
+                    "content": image_bytes
                 }
             }
         })
@@ -50,6 +46,10 @@ def analyze_image_and_text(text_description, image_bytes=None):
     except Exception as e:
         st.error(f"An error occurred in OpenAI processing: {str(e)}")
         return None
+
+# Initialize OpenAI client with API key
+api_key = st.secrets['OPENAI_SECRET']
+client = OpenAI(api_key=api_key)
 
 # Streamlit application
 st.title("DocGPT: Your Medical Assistant")
