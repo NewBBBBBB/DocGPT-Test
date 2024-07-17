@@ -25,7 +25,7 @@ def analyze_image_and_text(text_description, img_url=None):
     ]
 
     # If image bytes are provided, add it to the messages list
-    if image_bytes is not None:
+    if img_url is not None:
         messages.append({
             "role": "user",
             "content": [
@@ -65,7 +65,7 @@ with st.form(key='input_form'):
           img_type = uploaded_file.type
           img_url = f"data:{img_type};base64,{base64_image}"
 
-        advice = analyze_image_and_text(text_input, img_url)
+        advice = analyze_image_and_text(text_input,img_url)
         if advice:
             st.write("Here's your medical advice:")
             st.info(advice)
