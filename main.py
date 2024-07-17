@@ -1,27 +1,17 @@
 import streamlit as st
 from openai import OpenAI
-import requests
-import PIL.Image
 import base64
 from io import BytesIO
 
-# Function to fetch and encode image from URL
-def fetch_and_encode_image(image_url):
-    try:
-        response = requests.get(image_url)
-        if response.status_code == 200:
-            image_bytes = response.content
-            encoded_image = base64.b64encode(image_bytes).decode('utf-8')
-            return encoded_image
-        else:
-            st.error("Failed to fetch the image from the URL.")
-            return None
-    except Exception as e:
-        st.error(f"Error fetching image from URL: {str(e)}")
-        return None
+# Function to encode image as base64
+def encode_image(image):
+    buffered = BytesIO()
+    image.save(buffered, format="JPEG")
+    encoded_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
+    return encoded_image
 
 # Function to analyze text and optionally an image
-def analyze_image_and_text(text_description, image_url=None):
+def analyze_image_and_text(text_description, uploaded_file=None):
     # Prepare the messages list for OpenAI
     messages = [
         {
@@ -34,20 +24,21 @@ def analyze_image_and_text(text_description, image_url=None):
         }
     ]
 
-    # If image URL is provided, fetch and encode the image
-    if image_url:
-        image_content = fetch_and_encode_image(image_url)
-        if image_content:
-            messages.append({
-                "role": "user",
-                "content": {
-                    "text": text_description,
-                    "image": {
-                        "type": "image/jpeg",
-                        "content": image_content
-                    }
+    # If an image is uploaded, encode it as base64 and add to messages
+    if uploaded_file is not None:
+        image_bytes = uploaded_file.read()
+        image = PIL.Image.open(BytesIO(image_bytes))
+        encoded_image = encode_image(image)
+        messages.append({
+            "role": "user",
+            "content": {
+                "text": text_description,
+                "image": {
+                    "type": "image/jpeg",
+                    "content": encoded_image
                 }
-            })
+            }
+        })
 
     try:
         # Generate the medical advice using OpenAI's Chat API
@@ -75,11 +66,11 @@ with st.form(key='input_form'):
     st.write('Please provide information for health analysis')
     text_input = st.text_input('Enter symptoms or health concerns')
 
-    image_url_input = st.text_input('Enter image URL (optional)')
+    uploaded_file = st.file_uploader("Upload a JPEG image", type="jpg")
 
     submitted = st.form_submit_button("Submit")
     if submitted and text_input.strip():
-        advice = analyze_image_and_text(text_input, image_url_input)
+        advice = analyze_image_and_text(text_input, uploaded_file)
         if advice:
             st.write("Here's your medical advice:")
             st.info(advice)
