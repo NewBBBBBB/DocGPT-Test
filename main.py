@@ -1,19 +1,11 @@
 import streamlit as st
 from openai import OpenAI
-import base64
 import requests
-from io import BytesIO
 import PIL.Image
-
-# Function to encode image as base64
-def encode_image(image):
-    buffered = BytesIO()
-    image.save(buffered, format="JPEG")
-    encoded_image = base64.b64encode(buffered.getvalue()).decode('utf-8')
-    return encoded_image
+from io import BytesIO
 
 # Function to analyze text and optionally an image
-def analyze_image_and_text(text_description, uploaded_file=None):
+def analyze_image_and_text(text_description, image_url=None):
     # Prepare the messages list for OpenAI
     messages = [
         {
@@ -26,27 +18,33 @@ def analyze_image_and_text(text_description, uploaded_file=None):
         }
     ]
 
-    # If an image is uploaded, encode it as base64 and add to messages
-    if uploaded_file is not None:
+    # If an image URL is provided, fetch the image and add it to the messages list
+    if image_url:
         try:
-            image = PIL.Image.open(uploaded_file)
-            encoded_image = encode_image(image)
-            messages.append({
-                "role": "user",
-                "content": {
-                    "text": text_description,
-                    "image": {
-                        "type": "image/jpeg",
-                        "content": encoded_image
-                    }
-                }
-            })
+            response = requests.get(image_url)
+            if response.status_code == 200:
+                # Open the image using PIL
+                image = PIL.Image.open(BytesIO(response.content))
+
+                # Convert image to bytes
+                image_bytes = BytesIO()
+                image.save(image_bytes, format='JPEG')
+                image_bytes = image_bytes.getvalue()
+
+                # Add image to messages
+                messages.append({
+                    "role": "user",
+                    "content": {"text": text_description, "image": image_bytes}
+                })
+            else:
+                st.error("Failed to fetch the image from the URL.")
+                return None
         except Exception as e:
-            st.error(f"Error processing image: {str(e)}")
+            st.error(f"Error fetching or processing the image: {str(e)}")
             return None
 
     try:
-        # Generate the medical advice using OpenAI's Chat API
+        # Generate the medical advice using OpenAI's ChatCompletion API (adjust model as per your access)
         response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=messages,
@@ -58,24 +56,21 @@ def analyze_image_and_text(text_description, uploaded_file=None):
         advice = response['choices'][0]['message']['content']
         return advice
     except Exception as e:
-        st.error(f"An error occurred in OpenAI processing: {str(e)}")
+        st.error(f"An error occurred: {str(e)}")
         return None
 
-# Initialize OpenAI client with API key
 api_key = st.secrets['OPENAI_SECRET']
 client = OpenAI(api_key=api_key)
 
-# Streamlit application
-st.title("DocGPT: Your Medical Assistant")
+st.title("DocGPT")
 with st.form(key='input_form'):
     st.write('Please provide information for health analysis')
     text_input = st.text_input('Enter symptoms or health concerns')
-
-    uploaded_file = st.file_uploader("Upload a JPEG image", type=["jpg", "jpeg"])
+    image_url_input = st.text_input('Enter image URL (optional)')
 
     submitted = st.form_submit_button("Submit")
     if submitted and text_input.strip():
-        advice = analyze_image_and_text(text_input, uploaded_file)
+        advice = analyze_image_and_text(text_input, image_url_input)
         if advice:
             st.write("Here's your medical advice:")
             st.info(advice)
